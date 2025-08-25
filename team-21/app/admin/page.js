@@ -15,7 +15,8 @@ export default async function AdminDashboard({ searchParams }) {
     redirect("/");
   }
 
-  const searchQuery = searchParams?.search;
+  const resolvedSearchParams = await searchParams;
+  const searchQuery = resolvedSearchParams?.search;
   const user = await currentUser();
 
   const client = await clerkClient();
