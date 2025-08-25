@@ -5,7 +5,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ConditionalHeader } from "@/components/conditional-header";
-import { Footer } from "@/components/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Student Management Portal - Team 21",
-  description: "Comprehensive student management system for Mastercard Code for Change",
+  title: "Student Management Portal",
+  description: "Comprehensive student management system",
 };
 
 export default function RootLayout({ children }) {
@@ -28,7 +27,7 @@ export default function RootLayout({ children }) {
       <html lang="en" suppressHydrationWarning>
         <body
           suppressHydrationWarning
-          className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           <ThemeProvider
             attribute="class"
@@ -37,10 +36,7 @@ export default function RootLayout({ children }) {
             disableTransitionOnChange
           >
             <ConditionalHeader />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
+            {children}
           </ThemeProvider>
         </body>
       </html>
