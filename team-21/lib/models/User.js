@@ -1,7 +1,13 @@
 import mongoose from 'mongoose';
 
-// Basic fields for all users
-const BasicUserFields = {
+// Unified User Schema for all roles
+const UserSchema = new mongoose.Schema({
+  // Basic Authentication Fields
+  clerkId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   username: {
     type: String,
     required: true,
@@ -17,8 +23,12 @@ const BasicUserFields = {
   },
   password_hash: {
     type: String,
-    required: true,
     minlength: 8
+  },
+  role: {
+    type: String,
+    enum: ['student', 'mentor', 'admin'],
+    required: true
   },
   status: {
     type: String,
@@ -28,27 +38,15 @@ const BasicUserFields = {
   last_login: {
     type: Date,
     default: null
-  }
-};
-
-// Student Schema
-const StudentSchema = new mongoose.Schema({
-  ...BasicUserFields,
-  role: {
-    type: String,
-    enum: ['student'],
-    default: 'student'
   },
+
+  // Student-specific fields (only used when role = 'student')
   student_code: {
     type: String,
-    required: true,
-    unique: true,
+    sparse: true,
     match: /^Y4D_K_[0-9]{6}$/
   },
-  full_name: {
-    type: String,
-    required: true
-  },
+  full_name: String,
   dob: Date,
   gender: {
     type: String,
@@ -72,69 +70,104 @@ const StudentSchema = new mongoose.Schema({
     default: 'Not Placed'
   },
   enrollment_date: Date,
-  events: {
-    type: [String],
-    default: []
+
+  // Professional Growth Data
+  professional_growth: [{
+    company_name: String,
+    job_role: String,
+    employment_type: {
+      type: String,
+      enum: ['Internship', 'Full Time', 'Contract']
+    },
+    start_date: Date,
+    end_date: Date,
+    salary: Number,
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5
+    },
+    skills_acquired: [String],
+    achievements: [String]
+  }],
+
+  // Marksheet/Documents
+  marksheets: [{
+    document_type: {
+      type: String,
+      enum: ['10th', '12th', 'Diploma', 'Graduation', 'Post-Graduation', 'Certificate']
+    },
+    file_url: String,
+    file_name: String,
+    upload_date: {
+      type: Date,
+      default: Date.now
+    },
+    verified: {
+      type: Boolean,
+      default: false
+    }
+  }],
+
+  // Events (for admin/mentor roles)
+  events_created: [{
+    title: String,
+    description: String,
+    event_date: Date,
+    location: String,
+    visibility: {
+      type: String,
+      enum: ['all', 'students', 'mentors'],
+      default: 'all'
+    },
+    attendees: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }]
+  }],
+
+  // Relationships
+  assigned_students: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  assigned_mentor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  // Additional metadata
+  preferences: {
+    notifications: {
+      type: Boolean,
+      default: true
+    },
+    theme: {
+      type: String,
+      enum: ['light', 'dark'],
+      default: 'light'
+    }
   }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-// Mentor Schema
-const MentorSchema = new mongoose.Schema({
-  ...BasicUserFields,
-  role: {
-    type: String,
-    enum: ['mentor'],
-    default: 'mentor'
-  },
-  students: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student'
-  }]
-}, {
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
-});
-
-// Admin Schema
-const AdminSchema = new mongoose.Schema({
-  ...BasicUserFields,
-  role: {
-    type: String,
-    enum: ['admin'],
-    default: 'admin'
-  },
-  students: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student'
-  }],
-  mentors: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Mentor'
-  }]
-}, {
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
-});
+// Indexes for performance
+UserSchema.index({ role: 1 });
+UserSchema.index({ student_code: 1 }, { sparse: true });
+UserSchema.index({ email: 1 });
+UserSchema.index({ clerkId: 1 }, { sparse: true });
 
 // Model factory function
 export function getModels(connection) {
-  const models = {};
-  if (!connection.models.Student) {
-    models.Student = connection.model('Student', StudentSchema);
-  } else {
-    models.Student = connection.models.Student;
+  if (!connection.models.User) {
+    return {
+      User: connection.model('User', UserSchema)
+    };
   }
-  if (!connection.models.Mentor) {
-    models.Mentor = connection.model('Mentor', MentorSchema);
-  } else {
-    models.Mentor = connection.models.Mentor;
-  }
-  if (!connection.models.Admin) {
-    models.Admin = connection.model('Admin', AdminSchema);
-  } else {
-    models.Admin = connection.models.Admin;
-  }
-  return models;
+  return {
+    User: connection.models.User
+  };
 }
 
-export { StudentSchema, MentorSchema, AdminSchema };
+export { UserSchema };

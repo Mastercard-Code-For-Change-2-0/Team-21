@@ -1,33 +1,29 @@
 import mongoose from 'mongoose';
 
-// MongoDB URIs from environment
-const MONGODB_URIS = {
-  admin: process.env.MONGODB_URI_ADMIN,
-  user: process.env.MONGODB_URI_USER,
-  moderator: process.env.MONGODB_URI_MODERATOR,
-};
+// Single MongoDB URI from environment
+const MONGODB_URI = process.env.MONGODB_URI_MODERATOR;
 
-// Cache connections
-const cached = {};
+// Cache connection
+let cached = null;
 
 /**
- * Connect to MongoDB based on user role
- * @param {string} role - User role ('admin', 'user', 'moderator')
+ * Connect to MongoDB (single database)
  * @returns {Promise<mongoose.Connection>}
  */
-export async function connectDB(role = 'user') {
-  if (cached[role]) return cached[role];
+export async function connectDB() {
+  if (cached) return cached;
 
-  const uri = MONGODB_URIS[role];
-  if (!uri) throw new Error(`No MongoDB URI for role: ${role}`);
+  if (!MONGODB_URI) {
+    throw new Error('MongoDB URI not found in environment variables');
+  }
 
   try {
-    const connection = await mongoose.createConnection(uri);
-    cached[role] = connection;
-    console.log(`✅ Connected to MongoDB (${role})`);
+    const connection = await mongoose.createConnection(MONGODB_URI);
+    cached = connection;
+    console.log('✅ Connected to MongoDB (MC Database)');
     return connection;
   } catch (error) {
-    console.error(`❌ MongoDB connection failed (${role}):`, error.message);
+    console.error('❌ MongoDB connection failed:', error.message);
     throw error;
   }
 }

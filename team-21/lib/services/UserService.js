@@ -49,7 +49,7 @@ export class UserService {
         user.lastLogin = new Date();
         
         await user.save();
-        console.log(`✅ Updated user: ${email} in ${role} database`);
+        console.log(`Updated user: ${email} in ${role} database`);
       } else {
         // Create new user
         user = new User({
@@ -63,12 +63,12 @@ export class UserService {
         });
         
         await user.save();
-        console.log(`✅ Created new user: ${email} in ${role} database`);
+        console.log(`Created new user: ${email} in ${role} database`);
       }
       
       return user.toObject();
     } catch (error) {
-      console.error('❌ Error creating/updating user:', error);
+      console.error('Error creating/updating user:', error);
       throw error;
     }
   }
@@ -87,7 +87,7 @@ export class UserService {
       const user = await User.findByClerkId(clerkId);
       return user ? user.toObject() : null;
     } catch (error) {
-      console.error('❌ Error fetching user:', error);
+      console.error('Error fetching user:', error);
       throw error;
     }
   }
@@ -107,7 +107,7 @@ export class UserService {
       const role = clerkUser.publicMetadata?.role || 'client';
       return await this.getUserByClerkId(clerkUser.id, role);
     } catch (error) {
-      console.error('❌ Error getting current user:', error);
+      console.error('Error getting current user:', error);
       return null;
     }
   }
@@ -125,7 +125,7 @@ export class UserService {
       const users = await User.find({ isActive: true }).sort({ createdAt: -1 });
       return users.map(user => user.toObject());
     } catch (error) {
-      console.error(`❌ Error fetching ${role} users:`, error);
+      console.error(`Error fetching ${role} users:`, error);
       throw error;
     }
   }
@@ -157,7 +157,7 @@ export class UserService {
             // Delete from old database if role is changing
             if (role !== newRole) {
               await User.deleteOne({ clerkId });
-              console.log(`🗑️ Deleted user from ${role} database`);
+              console.log(`Deleted user from ${role} database`);
             }
             break;
           }
@@ -175,7 +175,7 @@ export class UserService {
       return await this.createOrUpdateUser(userData);
       
     } catch (error) {
-      console.error('❌ Error updating user role:', error);
+      console.error('Error updating user role:', error);
       throw error;
     }
   }
@@ -192,11 +192,11 @@ export class UserService {
       const User = getUserModel(connection);
       
       const result = await User.deleteOne({ clerkId });
-      console.log(`🗑️ Deleted user ${clerkId} from ${role} database`);
+      console.log(`Deleted user ${clerkId} from ${role} database`);
       
       return result.deletedCount > 0;
     } catch (error) {
-      console.error('❌ Error deleting user:', error);
+      console.error('Error deleting user:', error);
       throw error;
     }
   }
