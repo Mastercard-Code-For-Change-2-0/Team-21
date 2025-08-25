@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from "@/lib/models/User";
 
 // POST - Upload marksheet/document
 export async function POST(request) {
@@ -8,8 +8,8 @@ export async function POST(request) {
     const data = await request.json();
     const { userId, document_type, file_url, file_name } = data;
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     // Find user and add marksheet record
     const user = await User.findById(userId);
@@ -58,8 +58,8 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 10;
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     if (userId) {
       // Get specific user's documents

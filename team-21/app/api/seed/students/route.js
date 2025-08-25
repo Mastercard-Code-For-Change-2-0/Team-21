@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from "@/lib/models/User";
 
 // POST - Seed dummy student data
 export async function POST(request) {
   try {
     const { clearExisting = false } = await request.json();
     
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     // Dummy student data
     const dummyStudents = [
@@ -393,8 +393,8 @@ export async function POST(request) {
 // GET - Check current student count
 export async function GET() {
   try {
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     const stats = await User.aggregate([
       { $match: { role: 'student' } },

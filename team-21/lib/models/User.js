@@ -5,7 +5,6 @@ const UserSchema = new mongoose.Schema({
   // Basic Authentication Fields
   clerkId: {
     type: String,
-    unique: true,
     sparse: true
   },
   username: {
@@ -17,7 +16,6 @@ const UserSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true,
     match: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
   },
@@ -54,10 +52,14 @@ const UserSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    match: /^[0-9]{10}$/
+    match: /^[0-9]{10,12}$/  // Accept 10-12 digits for international formats
   },
   address: String,
+  employment_status: String,
+  father_occupation: String,
+  mother_occupation: String,
   education_level: String,
+  cgpa_percentage: String,
   graduation_year: {
     type: Number,
     min: 1900,
@@ -73,6 +75,25 @@ const UserSchema = new mongoose.Schema({
 
   // Professional Growth Data
   professional_growth: [{
+    current_organization: String,
+    current_role: String,
+    current_join_date: Date,
+    past_organization: String,
+    past_role: String,
+    past_join_date: Date,
+    past_leave_date: Date,
+    professional_challenge: String,
+    new_skills: String,
+    handle_criticism: String,
+    team_collaboration: String,
+    career_goals: String,
+    work_culture_contribution: String,
+    stay_updated: String,
+    submission_date: {
+      type: Date,
+      default: Date.now
+    },
+    // Legacy fields for backward compatibility
     company_name: String,
     job_role: String,
     employment_type: {
@@ -152,22 +173,24 @@ const UserSchema = new mongoose.Schema({
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-// Indexes for performance
+// Indexes for performance (creating unique indexes here instead of in field definitions)
 UserSchema.index({ role: 1 });
-UserSchema.index({ student_code: 1 }, { sparse: true });
-UserSchema.index({ email: 1 });
-UserSchema.index({ clerkId: 1 }, { sparse: true });
+UserSchema.index({ student_code: 1 }, { sparse: true, unique: true });
+UserSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ clerkId: 1 }, { sparse: true, unique: true });
 
-// Model factory function
+// Create or get existing model
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
+
+// Export the model
+export default User;
+
+// Also export the schema for backward compatibility
+export { UserSchema };
+
+// Model factory function for backward compatibility
 export function getModels(connection) {
-  if (!connection.models.User) {
-    return {
-      User: connection.model('User', UserSchema)
-    };
-  }
   return {
-    User: connection.models.User
+    User: User
   };
 }
-
-export { UserSchema };

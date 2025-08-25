@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from "@/lib/models/User";
 
 // PUT - Update professional growth record
 export async function PUT(request, { params }) {
@@ -9,8 +9,8 @@ export async function PUT(request, { params }) {
     const data = await request.json();
     const { userId, recordId, ...updateData } = data;
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     const user = await User.findById(userId);
     if (!user) {
@@ -65,8 +65,8 @@ export async function DELETE(request, { params }) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     const user = await User.findById(userId);
     if (!user) {

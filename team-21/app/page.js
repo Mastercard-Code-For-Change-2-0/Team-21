@@ -60,11 +60,6 @@ export default function Home() {
             Manage your academic journey with our comprehensive student portal. 
             Complete your registration, track professional growth, and upload documents all in one place.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3">
-              Sign In to Get Started
-            </Button>
-          </div>
         </div>
 
         {/* Features Section */}
@@ -150,23 +145,6 @@ export default function Home() {
               <CardDescription className="text-gray-600">
                 Monitor your academic progress and completion status across all required forms.
               </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center">
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg max-w-2xl mx-auto">
-            <CardContent className="p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Ready to Get Started?
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Sign in to access your personalized dashboard and begin managing your academic journey.
-              </p>
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3">
-                Sign In Now
-              </Button>
             </CardContent>
           </Card>
         </div>

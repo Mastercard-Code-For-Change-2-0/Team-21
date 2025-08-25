@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from "@/lib/models/User";
 
 // GET - Get analytics data
 export async function GET(request) {
@@ -9,8 +9,8 @@ export async function GET(request) {
     const timeFrame = searchParams.get('timeFrame') || '30'; // days
     const type = searchParams.get('type') || 'overview'; // overview, placement, documents, growth
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     const now = new Date();
     const timeFrameDate = new Date(now.getTime() - (parseInt(timeFrame) * 24 * 60 * 60 * 1000));

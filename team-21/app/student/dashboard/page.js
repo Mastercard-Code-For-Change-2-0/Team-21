@@ -7,9 +7,12 @@ import { useUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Clock, FileText, User, BookOpen, Award } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function StudentDashboard() {
   const { isSignedIn, isLoaded, user } = useUser();
+  const [progressData, setProgressData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Show loading state while Clerk is initializing
   if (!isLoaded) {
@@ -25,16 +28,54 @@ export default function StudentDashboard() {
     redirect("/");
   }
 
-  // Mock data for demo - in real app, this would come from your database
-  const studentProgress = {
-    registration: { completed: true, date: "2024-01-15" },
-    professionalGrowth: { completed: true, date: "2024-01-18" },
+  // Fetch progress data from API
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch('/api/student-progress')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            setProgressData(data);
+          } else {
+            console.error('Failed to fetch progress:', data.error);
+          }
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error('Error fetching progress:', error);
+          setLoading(false);
+        });
+    }
+  }, [isSignedIn]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading your progress...</div>
+      </div>
+    );
+  }
+
+  // Default data if API fails
+  const studentProgress = progressData?.progress || {
+    registration: { completed: false, date: null },
+    professionalGrowth: { completed: false, date: null },
     marksheet: { completed: false, date: null }
   };
 
   const stats = [
-    { title: "Forms Completed", value: "2/3", icon: FileText, color: "bg-blue-500" },
-    { title: "Profile Completion", value: "85%", icon: User, color: "bg-green-500" },
+    { 
+      title: "Forms Completed", 
+      value: progressData?.stats ? `${progressData.stats.formsCompleted}/${progressData.stats.totalForms}` : "0/3", 
+      icon: FileText, 
+      color: "bg-blue-500" 
+    },
+    { 
+      title: "Profile Completion", 
+      value: progressData?.stats ? `${progressData.stats.profileCompletion}%` : "0%", 
+      icon: User, 
+      color: "bg-green-500" 
+    },
     { title: "Current Status", value: "Active", icon: CheckCircle, color: "bg-emerald-500" },
     { title: "Academic Year", value: "2024-25", icon: BookOpen, color: "bg-purple-500" }
   ];
@@ -69,7 +110,7 @@ export default function StudentDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.firstName || "Student"}!
+            Welcome back, {progressData?.user?.name || user?.firstName || "Student"}!
           </h1>
           <p className="text-gray-600">
             Track your progress and manage your academic information

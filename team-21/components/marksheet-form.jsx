@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Upload, File, X } from "lucide-react"
 
@@ -54,6 +54,21 @@ const optionalFileValidation = z
   }, "Only PDF, JPEG, and PNG files are accepted.");
 
 const formSchema = z.object({
+  // Text fields for basic information
+  institutionName: z.string().min(2, {
+    message: "Institution name must be at least 2 characters.",
+  }),
+  degreeProgram: z.string().min(2, {
+    message: "Degree program must be at least 2 characters.",
+  }),
+  graduationYear: z.string().min(4, {
+    message: "Please enter a valid graduation year.",
+  }),
+  cgpaPercentage: z.string().min(1, {
+    message: "Please enter your CGPA/Percentage.",
+  }),
+  
+  // File fields
   tenthMarksheet: fileValidation,
   twelfthMarksheet: fileValidation,
   highestDegreeMarksheet: fileValidation,
@@ -63,6 +78,7 @@ const formSchema = z.object({
 
 export function MarksheetForm() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
   
   const [uploadedFiles, setUploadedFiles] = useState({
     tenthMarksheet: null,
@@ -74,15 +90,71 @@ export function MarksheetForm() {
 
   const form = useForm({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      institutionName: "",
+      degreeProgram: "",
+      graduationYear: "",
+      cgpaPercentage: "",
+      tenthMarksheet: undefined,
+      twelfthMarksheet: undefined,
+      highestDegreeMarksheet: undefined,
+      certificationCourse1: undefined,
+      certificationCourse2: undefined,
+    },
   })
 
+  // Fetch existing user data to pre-populate form
+  useEffect(() => {
+    fetch('/api/user-data')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const userData = data.data
+          form.reset({
+            institutionName: userData.institution_name || "",
+            degreeProgram: userData.degree_program || "",
+            graduationYear: userData.graduation_year || "",
+            cgpaPercentage: userData.cgpa_percentage || "",
+          })
+        }
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Error fetching user data:', error)
+        setLoading(false)
+      })
+  }, [])
+
   function onSubmit(values) {
-    console.log("Form values:", values)
-    console.log("Uploaded files:", uploadedFiles)
-    // Here you would typically upload files to your server
-    alert("All forms completed successfully! Redirecting to your dashboard...")
-    // Redirect to student dashboard
-    router.push("/student/dashboard")
+    console.log(values)
+    
+    // Save to database
+    fetch('/api/marksheet-upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("Marksheet uploaded successfully! All forms completed. Returning to dashboard...")
+        // Redirect to student dashboard
+        router.push("/student/dashboard")
+      } else {
+        // Show detailed error messages
+        let errorMessage = data.message;
+        if (data.errors && Array.isArray(data.errors)) {
+          errorMessage += '\n\nValidation errors:\n' + data.errors.join('\n');
+        }
+        alert(`Error: ${errorMessage}`)
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error)
+      alert('Failed to upload marksheet. Please try again.')
+    })
   }
 
   const handleFileChange = (fieldName, files) => {
@@ -107,7 +179,7 @@ export function MarksheetForm() {
     <FormField
       control={form.control}
       name={name}
-      render={({ field: { onChange, ...field } }) => (
+      render={({ field: { onChange, value, ...field } }) => (
         <FormItem>
           <FormLabel>
             {label}
@@ -181,8 +253,76 @@ export function MarksheetForm() {
             </p>
           </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="text-lg">Loading your information...</div>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              
+              {/* Basic Academic Information */}
+              <div className="border-b border-gray-200 pb-8">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Academic Information</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="institutionName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Institution/University Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your institution name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="degreeProgram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Degree Program</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., B.Tech Computer Science" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="graduationYear"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Graduation Year</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., 2024" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cgpaPercentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CGPA/Percentage</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., 8.5 CGPA or 85%" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               
               {/* Academic Marksheets Section */}
               <div className="border-b border-gray-200 pb-8">
@@ -280,6 +420,7 @@ export function MarksheetForm() {
               </div>
             </form>
           </Form>
+          )}
         </div>
       </div>
     </div>

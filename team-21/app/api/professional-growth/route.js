@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from '@/lib/models/User';
 
 // POST - Add professional growth record
 export async function POST(request) {
@@ -8,8 +8,7 @@ export async function POST(request) {
     const data = await request.json();
     const { userId, ...growthData } = data;
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
 
     // Find user and add professional growth record
     const user = await User.findById(userId);
@@ -46,7 +45,7 @@ export async function POST(request) {
   }
 }
 
-// GET - Get professional growth records
+// GET - Fetch professional growth records
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -54,8 +53,7 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page')) || 1;
     const limit = parseInt(searchParams.get('limit')) || 10;
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
 
     if (userId) {
       // Get specific user's records

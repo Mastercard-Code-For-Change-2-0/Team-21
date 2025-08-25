@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from "@/lib/models/User";
 
 // GET - Moderator dashboard data
 export async function GET(request) {
@@ -9,8 +9,8 @@ export async function GET(request) {
     const mentorId = searchParams.get('mentorId');
     const timeFrame = searchParams.get('timeFrame') || '30'; // days
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     if (!mentorId) {
       return NextResponse.json({
@@ -143,8 +143,8 @@ export async function POST(request) {
     const data = await request.json();
     const { action, mentorId, studentId, documentId, verified, feedback } = data;
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     switch (action) {
       case 'verify_document':

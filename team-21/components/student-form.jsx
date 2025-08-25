@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -38,9 +39,10 @@ const formSchema = z.object({
   gender: z.string().min(1, {
     message: "Please select your gender.",
   }),
-  phone: z.string().min(10, {
-    message: "Phone number must be at least 10 digits.",
-  }),
+  phone: z.string()
+    .regex(/^[0-9]{10,12}$/, {
+      message: "Phone number must be 10-12 digits only.",
+    }),
   address: z.string().min(10, {
     message: "Address must be at least 10 characters.",
   }),
@@ -66,6 +68,7 @@ const formSchema = z.object({
 
 export function StudentForm() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
   
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -85,12 +88,66 @@ export function StudentForm() {
     },
   })
 
+  // Fetch existing user data to pre-populate form
+  useEffect(() => {
+    fetch('/api/user-data')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const userData = data.data
+          form.reset({
+            studentId: userData.student_id || "",
+            name: userData.full_name || "",
+            dateOfBirth: userData.date_of_birth || "",
+            gender: userData.gender || "",
+            phone: userData.phone_number || "",
+            address: userData.address || "",
+            employmentStatus: userData.employment_status || "",
+            fatherOccupation: userData.father_occupation || "",
+            motherOccupation: userData.mother_occupation || "",
+            highestDegree: userData.degree_program || "",
+            cgpaPercentage: userData.cgpa_percentage || "",
+            universityName: userData.institution_name || "",
+          })
+        }
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Error fetching user data:', error)
+        setLoading(false)
+      })
+  }, [])
+
   function onSubmit(values) {
     console.log(values)
-    // Here you would typically send the data to your backend
-    alert("Registration submitted successfully! Redirecting to Professional Growth Form...")
-    // Redirect to professional growth form
-    router.push("/student/professional-growth")
+    
+    // Save to database
+    fetch('/api/student-registration', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("Registration submitted successfully! Redirecting to Professional Growth Form...")
+        // Redirect to professional growth form
+        router.push("/student/professional-growth")
+      } else {
+        // Show detailed error messages
+        let errorMessage = data.message;
+        if (data.errors && Array.isArray(data.errors)) {
+          errorMessage += '\n\nValidation errors:\n' + data.errors.join('\n');
+        }
+        alert(`Error: ${errorMessage}`)
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error)
+      alert('Failed to submit registration. Please try again.')
+    })
   }
 
   return (
@@ -104,8 +161,13 @@ export function StudentForm() {
             </p>
           </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="text-lg">Loading your information...</div>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Student Information Section */}
               <div className="border-b border-gray-200 pb-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Student Information</h2>
@@ -359,6 +421,7 @@ export function StudentForm() {
               </div>
             </form>
           </Form>
+          )}
         </div>
       </div>
     </div>

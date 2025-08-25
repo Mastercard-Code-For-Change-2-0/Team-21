@@ -1,31 +1,52 @@
 import mongoose from 'mongoose';
 
-// Single MongoDB URI from environment
+// MongoDB URI from environment
 const MONGODB_URI = process.env.MONGODB_URI_MODERATOR;
 
-// Cache connection
-let cached = null;
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI_MODERATOR environment variable inside .env.local');
+}
+
+// Cache connection in global to prevent re-connecting during development
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
 
 /**
- * Connect to MongoDB (single database)
+ * Connect to MongoDB with proper connection management
  * @returns {Promise<mongoose.Connection>}
  */
 export async function connectDB() {
-  if (cached) return cached;
+  if (cached.conn) {
+    return cached.conn;
+  }
 
-  if (!MONGODB_URI) {
-    throw new Error('MongoDB URI not found in environment variables');
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      family: 4 // Use IPv4, skip trying IPv6
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log('✅ Connected to MongoDB (MC Database)');
+      return mongoose;
+    });
   }
 
   try {
-    const connection = await mongoose.createConnection(MONGODB_URI);
-    cached = connection;
-    console.log('✅ Connected to MongoDB (MC Database)');
-    return connection;
-  } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
-    throw error;
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    console.error('❌ MongoDB connection failed:', e.message);
+    throw e;
   }
+
+  return cached.conn;
 }
 
 export default connectDB;

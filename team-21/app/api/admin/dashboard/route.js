@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from "@/lib/models/User";
 
 // GET - Admin dashboard data
 export async function GET(request) {
@@ -8,8 +8,8 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const timeFrame = searchParams.get('timeFrame') || '30'; // days
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     const now = new Date();
     const timeFrameDate = new Date(now.getTime() - (parseInt(timeFrame) * 24 * 60 * 60 * 1000));
@@ -141,8 +141,8 @@ export async function POST(request) {
     const data = await request.json();
     const { action, studentId, mentorId, status } = data;
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
+    
 
     switch (action) {
       case 'assign_mentor':

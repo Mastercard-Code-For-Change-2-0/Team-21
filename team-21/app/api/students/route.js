@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from '@/lib/models/User';
 
 // Generate student code
 function generateStudentCode() {
@@ -12,8 +12,7 @@ function generateStudentCode() {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
 
     // Generate unique student code
     let studentCode;
@@ -74,8 +73,7 @@ export async function GET(request) {
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || 'all';
 
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
 
     // Build query
     let query = { role: 'student' };

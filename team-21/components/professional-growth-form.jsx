@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -68,6 +69,7 @@ const formSchema = z.object({
 
 export function ProfessionalGrowthForm() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
   
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -89,12 +91,68 @@ export function ProfessionalGrowthForm() {
     },
   })
 
+  // Fetch existing user data to pre-populate form
+  useEffect(() => {
+    fetch('/api/user-data')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.data && data.data.professional_growth && data.data.professional_growth.length > 0) {
+          const growthData = data.data.professional_growth[0] // Use latest entry
+          form.reset({
+            currentOrganization: growthData.current_organization || "",
+            currentRole: growthData.current_role || "",
+            currentJoinDate: growthData.current_join_date || "",
+            pastOrganization: growthData.past_organization || "",
+            pastRole: growthData.past_role || "",
+            pastJoinDate: growthData.past_join_date || "",
+            pastLeaveDate: growthData.past_leave_date || "",
+            professionalChallenge: growthData.professional_challenge || "",
+            newSkills: growthData.new_skills || "",
+            handleCriticism: growthData.handle_criticism || "",
+            teamCollaboration: growthData.team_collaboration || "",
+            careerGoals: growthData.career_goals || "",
+            workCultureContribution: growthData.work_culture_contribution || "",
+            stayUpdated: growthData.stay_updated || "",
+          })
+        }
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Error fetching user data:', error)
+        setLoading(false)
+      })
+  }, [])
+
   function onSubmit(values) {
     console.log(values)
-    // Here you would typically send the data to your backend for LLM-as-a-judge evaluation
-    alert("Professional Growth Form submitted successfully! Redirecting to Marksheet Upload...")
-    // Redirect to marksheet upload form
-    router.push("/student/marksheet")
+    
+    // Save to database
+    fetch('/api/professional-growth-form', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("Professional Growth Form submitted successfully! Redirecting to Marksheet Upload...")
+        // Redirect to marksheet upload
+        router.push("/student/marksheet")
+      } else {
+        // Show detailed error messages
+        let errorMessage = data.message;
+        if (data.errors && Array.isArray(data.errors)) {
+          errorMessage += '\n\nValidation errors:\n' + data.errors.join('\n');
+        }
+        alert(`Error: ${errorMessage}`)
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error)
+      alert('Failed to submit professional growth form. Please try again.')
+    })
   }
 
   return (
@@ -108,8 +166,13 @@ export function ProfessionalGrowthForm() {
             </p>
           </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="text-lg">Loading your information...</div>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               
               {/* Current Organization Section */}
               <div className="border-b border-gray-200 pb-8">
@@ -417,6 +480,7 @@ export function ProfessionalGrowthForm() {
               </div>
             </form>
           </Form>
+          )}
         </div>
       </div>
     </div>

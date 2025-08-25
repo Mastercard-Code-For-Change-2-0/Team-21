@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { getModels } from '@/lib/models/User';
+import User from '@/lib/models/User';
 
 // GET - Get specific student
 export async function GET(request, { params }) {
   try {
     const { id } = params;
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
 
     const student = await User.findById(id)
       .select('-password_hash')
@@ -41,8 +40,7 @@ export async function PUT(request, { params }) {
   try {
     const { id } = params;
     const data = await request.json();
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
 
     const student = await User.findOneAndUpdate(
       { _id: id, role: 'student' },
@@ -77,8 +75,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
-    const connection = await connectDB();
-    const { User } = getModels(connection);
+    await connectDB();
 
     const student = await User.findOneAndDelete({ _id: id, role: 'student' });
 
