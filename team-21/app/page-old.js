@@ -171,6 +171,42 @@ export default function Home() {
           </Card>
         </div>
       </div>
+              Marksheet Upload
+            </Button>
+            <Button
+              variant={activeForm === "admin" ? "default" : "outline"}
+              onClick={() => setActiveForm("admin")}
+              className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
+                activeForm === "admin" 
+                  ? "bg-red-600 text-white" 
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Admin Dashboard
+            </Button>
+            <Button
+              variant={activeForm === "moderator" ? "default" : "outline"}
+              onClick={() => setActiveForm("moderator")}
+              className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
+                activeForm === "moderator" 
+                  ? "bg-orange-600 text-white" 
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Moderator Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Form Content */}
+      <div className="pt-0">
+        {activeForm === "student" && <StudentForm />}
+        {activeForm === "professional" && <ProfessionalGrowthForm />}
+        {activeForm === "marksheet" && <MarksheetForm />}
+        {activeForm === "admin" && <AdminDashboard />}
+        {activeForm === "moderator" && <ModeratorDashboard />}
+      </div>
     </main>
   );
 }

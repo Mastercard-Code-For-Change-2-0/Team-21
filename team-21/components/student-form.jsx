@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -64,6 +65,8 @@ const formSchema = z.object({
 })
 
 export function StudentForm() {
+  const router = useRouter()
+  
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -85,7 +88,9 @@ export function StudentForm() {
   function onSubmit(values) {
     console.log(values)
     // Here you would typically send the data to your backend
-    alert("Form submitted successfully!")
+    alert("Registration submitted successfully! Redirecting to Professional Growth Form...")
+    // Redirect to professional growth form
+    router.push("/student/professional-growth")
   }
 
   return (
@@ -335,13 +340,21 @@ export function StudentForm() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="pt-6">
+              {/* Navigation and Submit Buttons */}
+              <div className="pt-6 flex flex-col sm:flex-row gap-4">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push("/student/dashboard")}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                >
+                  Back to Dashboard
+                </Button>
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
                 >
-                  Submit Registration
+                  Submit & Continue to Professional Growth
                 </Button>
               </div>
             </form>

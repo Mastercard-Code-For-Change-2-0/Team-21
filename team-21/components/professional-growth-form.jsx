@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -66,6 +67,8 @@ const formSchema = z.object({
 })
 
 export function ProfessionalGrowthForm() {
+  const router = useRouter()
+  
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -89,7 +92,9 @@ export function ProfessionalGrowthForm() {
   function onSubmit(values) {
     console.log(values)
     // Here you would typically send the data to your backend for LLM-as-a-judge evaluation
-    alert("Professional Growth Form submitted successfully!")
+    alert("Professional Growth Form submitted successfully! Redirecting to Marksheet Upload...")
+    // Redirect to marksheet upload form
+    router.push("/student/marksheet")
   }
 
   return (
@@ -380,13 +385,31 @@ export function ProfessionalGrowthForm() {
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Navigation and Submit Buttons */}
               <div className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/student")}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    Back to Registration
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/student/dashboard")}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    Back to Dashboard
+                  </Button>
+                </div>
                 <Button 
                   type="submit" 
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-6 rounded-lg transition-colors duration-200 text-lg"
                 >
-                  Submit Professional Growth Form
+                  Submit & Continue to Marksheet Upload
                 </Button>
                 <p className="text-sm text-gray-600 mt-3 text-center">
                   Your responses will be evaluated for depth, clarity, and professional insight

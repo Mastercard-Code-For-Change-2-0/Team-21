@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Upload, File, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -61,6 +62,8 @@ const formSchema = z.object({
 })
 
 export function MarksheetForm() {
+  const router = useRouter()
+  
   const [uploadedFiles, setUploadedFiles] = useState({
     tenthMarksheet: null,
     twelfthMarksheet: null,
@@ -77,7 +80,9 @@ export function MarksheetForm() {
     console.log("Form values:", values)
     console.log("Uploaded files:", uploadedFiles)
     // Here you would typically upload files to your server
-    alert("Marksheet form submitted successfully!")
+    alert("All forms completed successfully! Redirecting to your dashboard...")
+    // Redirect to student dashboard
+    router.push("/student/dashboard")
   }
 
   const handleFileChange = (fieldName, files) => {
@@ -243,13 +248,31 @@ export function MarksheetForm() {
                 </ul>
               </div>
 
-              {/* Submit Button */}
+              {/* Navigation and Submit Buttons */}
               <div className="pt-6">
+                <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/student/professional-growth")}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    Back to Professional Growth
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/student/dashboard")}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    Back to Dashboard
+                  </Button>
+                </div>
                 <Button 
                   type="submit" 
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-4 px-6 rounded-lg transition-colors duration-200 text-lg"
                 >
-                  Submit Marksheet Form
+                  Complete All Forms & Go to Dashboard
                 </Button>
                 <p className="text-sm text-gray-600 mt-3 text-center">
                   Please ensure all required documents are uploaded before submitting
