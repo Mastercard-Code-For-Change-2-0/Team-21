@@ -24,8 +24,13 @@ export async function POST(request) {
 
     await connectDB();
 
-    // Check if user already exists
-    let existingUser = await User.findOne({ clerkId: user.id });
+    // Check if user already exists by clerkId or email
+    let existingUser = await User.findOne({ 
+      $or: [
+        { clerkId: user.id },
+        { email: user.emailAddresses[0]?.emailAddress }
+      ]
+    });
 
     if (existingUser) {
       // Update existing user
@@ -51,6 +56,12 @@ export async function POST(request) {
         { new: true, runValidators: true }
       );
 
+      if (!updatedUser) {
+        return NextResponse.json({
+          success: false,
+          message: 'No user found to update',
+        }, { status: 404 });
+      }
       return NextResponse.json({
         success: true,
         message: 'Student registration updated successfully',
@@ -75,7 +86,8 @@ export async function POST(request) {
         const existing = await User.findOne({ 
           $or: [
             { student_code: studentCode },
-            { username: username }
+            { username: username },
+            { email: user.emailAddresses[0]?.emailAddress }
           ]
         });
         if (!existing) isUnique = true;

@@ -9,9 +9,8 @@ const UserSchema = new mongoose.Schema({
   },
   username: {
     type: String,
-    required: true,
-    unique: true,
-    trim: true
+  required: false,
+  trim: true
   },
   email: {
     type: String,
@@ -25,7 +24,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'mentor', 'admin'],
+    enum: ['student', 'mentor', 'admin', 'moderator', 'client'],
     required: true
   },
   status: {
@@ -33,8 +32,27 @@ const UserSchema = new mongoose.Schema({
     enum: ['active', 'inactive', 'blocked'],
     default: 'active'
   },
+  // Alias allows using doc.lastLogin in code while storing as last_login
   last_login: {
     type: Date,
+    alias: 'lastLogin',
+    default: null
+  },
+  // Optional profile image URL, alias to support profileImage in services
+  profile_image: {
+    type: String,
+    alias: 'profileImage',
+    default: null
+  },
+  // Optional separate name parts for compatibility with services
+  first_name: {
+    type: String,
+    alias: 'firstName',
+    default: null
+  },
+  last_name: {
+    type: String,
+    alias: 'lastName',
     default: null
   },
 
@@ -72,6 +90,11 @@ const UserSchema = new mongoose.Schema({
     default: 'Not Placed'
   },
   enrollment_date: Date,
+  // Common active flag (compat with service layer)
+  isActive: {
+    type: Boolean,
+    default: true
+  },
 
   // Professional Growth Data
   professional_growth: [{
@@ -175,9 +198,15 @@ const UserSchema = new mongoose.Schema({
 
 // Indexes for performance (creating unique indexes here instead of in field definitions)
 UserSchema.index({ role: 1 });
+UserSchema.index({ username: 1 }, { unique: true, sparse: true });
 UserSchema.index({ student_code: 1 }, { sparse: true, unique: true });
 UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ clerkId: 1 }, { sparse: true, unique: true });
+
+// Static helpers
+UserSchema.statics.findByClerkId = function (clerkId) {
+  return this.findOne({ clerkId });
+};
 
 // Create or get existing model
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
@@ -193,4 +222,10 @@ export function getModels(connection) {
   return {
     User: User
   };
+}
+
+// Helper to get User model bound to a specific connection (multi-DB compatibility)
+export function getUserModel(connection) {
+  if (!connection || !connection.models) return User;
+  return connection.models.User || connection.model('User', UserSchema);
 }

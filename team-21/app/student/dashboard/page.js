@@ -14,20 +14,6 @@ export default function StudentDashboard() {
   const [progressData, setProgressData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Show loading state while Clerk is initializing
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
-
-  // Redirect to home if not signed in
-  if (!isSignedIn) {
-    redirect("/");
-  }
-
   // Fetch progress data from API
   useEffect(() => {
     if (isSignedIn) {
@@ -47,6 +33,20 @@ export default function StudentDashboard() {
         });
     }
   }, [isSignedIn]);
+
+  // Show loading state while Clerk is initializing
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  // Redirect to home if not signed in
+  if (!isSignedIn) {
+    redirect("/");
+  }
 
   if (loading) {
     return (

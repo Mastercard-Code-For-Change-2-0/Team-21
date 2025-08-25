@@ -50,3 +50,10 @@ export async function connectDB() {
 }
 
 export default connectDB;
+
+// Backward-compat helper expected by services/tests
+export async function connectToDatabase(role = 'user') {
+  // For now, we don't switch DBs per role; we keep a single connection.
+  // This preserves the API expected by UserService and test routes.
+  return connectDB();
+}
